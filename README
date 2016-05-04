@@ -1,0 +1,4 @@
+## Install pack ##
+
+docker-compose run arbiter shinken install http
+

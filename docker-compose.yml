@@ -1,0 +1,75 @@
+version: '2'
+
+services:
+  arbiter:
+    image: pockost/shinken:2.4-webui2-base
+    links:
+      - poller
+      - scheduler
+      - reactionner
+      - broker
+      - receiver
+      - mongo
+    command: "/usr/bin/shinken-arbiter -c /etc/shinken/shinken.cfg"
+    expose:
+      - "7770"
+    volumes:
+      - ./data/shinken:/var/lib/shinken
+      - ./config/shinken:/etc/shinken
+  poller:
+    image: pockost/shinken:2.4-webui2-base
+    expose:
+      - 7771
+    command: "/usr/bin/shinken-poller -c /etc/shinken/daemons/pollerd.ini"
+    links:
+      - scheduler
+    volumes:
+      - ./data/shinken:/var/lib/shinken
+      - ./config/shinken:/etc/shinken
+  scheduler:
+    image: pockost/shinken:2.4-webui2-base
+    links:
+      - mongo
+    expose:
+      - 7768
+    command: "/usr/bin/shinken-scheduler -c /etc/shinken/daemons/schedulerd.ini"
+    volumes:
+      - ./data/shinken:/var/lib/shinken
+      - ./config/shinken:/etc/shinken
+  reactionner:
+    image: pockost/shinken:2.4-webui2-base
+    expose:
+      - 7769
+    command: "/usr/bin/shinken-reactionner -c /etc/shinken/daemons/reactionnerd.ini"
+    volumes:
+    links:
+      - scheduler
+    volumes:
+      - ./data/shinken:/var/lib/shinken
+      - ./config/shinken:/etc/shinken
+  broker:
+    image: pockost/shinken:2.4-webui2-base
+    command: "/usr/bin/shinken-broker -c /etc/shinken/daemons/brokerd.ini"
+    expose:
+      - "7772"
+    ports:
+      - "7767"
+    volumes:
+      - ./data/shinken:/var/lib/shinken
+      - ./config/shinken:/etc/shinken
+    links:
+      - graphite
+  receiver:
+    image: pockost/shinken:2.4-webui2-base
+    command: "/usr/bin/shinken-receiver -c /etc/shinken/daemons/receiverd.ini"
+    volumes:
+      - ./data/shinken:/var/lib/shinken
+      - ./config/shinken:/etc/shinken
+  graphite:
+    image: sitespeedio/graphite
+    ports:
+      - 8080:80
+  mongo:
+    image: mongo
+    volumes:
+      - ./data/mongo:/data/db
